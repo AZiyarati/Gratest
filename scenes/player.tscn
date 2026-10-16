@@ -1,0 +1,129 @@
+[gd_scene format=3 uid="uid://c05lq0ghmpg84"]
+
+[ext_resource type="Script" uid="uid://m308shg1aiy3" path="res://scripts/components/core/sensor_hub.gd" id="1_3vyb7"]
+[ext_resource type="Script" uid="uid://bpfcttpufd8fe" path="res://scripts/components/core/player.gd" id="1_g2els"]
+[ext_resource type="Script" uid="uid://dp53xxt7dg0jm" path="res://scripts/components/core/movement_component.gd" id="3_qhqgy"]
+[ext_resource type="Script" uid="uid://dl5nj5ktv2bxe" path="res://scripts/components/visual/motion_visual_component.gd" id="4_dqkch"]
+[ext_resource type="Script" uid="uid://dsy1nydfsd2gl" path="res://scripts/components/visual/head_bob_component.gd" id="5_qlg0r"]
+[ext_resource type="Script" uid="uid://kx8r1jm10sp3" path="res://scripts/components/visual/speed_effect_component.gd" id="6_tuyoq"]
+[ext_resource type="Script" uid="uid://j30wt24fodep" path="res://scripts/components/visual/speed_effect_profile.gd" id="7_fjrip"]
+[ext_resource type="Script" uid="uid://kqtp3xhl4hb5" path="res://scripts/components/core/dash_component.gd" id="8_smehm"]
+[ext_resource type="Script" uid="uid://b40eacrlxhmok" path="res://scripts/components/core/fall_behavior_component.gd" id="9_ur7pv"]
+[ext_resource type="Script" uid="uid://bjhfogoemd3ia" path="res://scripts/components/traversal/wall_run_component.gd" id="10_y4r1p"]
+[ext_resource type="Script" uid="uid://d06wvm56oskdc" path="res://scripts/components/traversal/ladder_climb_component.gd" id="11_d2wvv"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_am7ho"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_qhqgy"]
+height = 1.2
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_dqkch"]
+radius = 0.35
+height = 0.9
+
+[sub_resource type="Resource" id="Resource_fjrip"]
+script = ExtResource("7_fjrip")
+metadata/_custom_type_script = "uid://j30wt24fodep"
+
+[node name="Player" type="CharacterBody3D" unique_id=1196337714]
+script = ExtResource("1_g2els")
+
+[node name="neck" type="Node3D" parent="." unique_id=213668587]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0)
+
+[node name="head" type="Node3D" parent="neck" unique_id=1981659557]
+
+[node name="eyes" type="Node3D" parent="neck/head" unique_id=1327143619]
+
+[node name="Camera3D" type="Camera3D" parent="neck/head/eyes" unique_id=218988460]
+
+[node name="standing_collision_shape" type="CollisionShape3D" parent="." unique_id=1335745918]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("CapsuleShape3D_am7ho")
+
+[node name="crouching_collision_shape" type="CollisionShape3D" parent="." unique_id=1409764895]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.6, 0)
+shape = SubResource("CapsuleShape3D_qhqgy")
+disabled = true
+
+[node name="prone_collision_shape" type="CollisionShape3D" parent="." unique_id=1156564630]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0.35, 0)
+shape = SubResource("CapsuleShape3D_dqkch")
+disabled = true
+
+[node name="SensorHub" type="Node3D" parent="." unique_id=766519106]
+script = ExtResource("1_3vyb7")
+
+[node name="MovementComponent" type="Node3D" parent="." unique_id=780886609]
+script = ExtResource("3_qhqgy")
+enable_crouch_sprint = false
+jump_velocity = 6.0
+bhop_wish_speed = 8.0
+air_mouse_steer_strength = 3.0
+prone_mode = 1
+stand_clearance = 1.8
+crouch_clearance = 1.2
+slide_requires_input = false
+crouch_depth = -0.7
+prone_depth = -1.2
+
+[node name="MotionVisualComponent" type="Node3D" parent="." unique_id=863499691]
+script = ExtResource("4_dqkch")
+roll_duration = 0.6
+roll_full_rotation = false
+slap_duration = 5.0
+slap_slam_in = 0.1
+slap_pitch_degrees = 75.0
+slap_roll_degrees = 90.0
+slap_y_offset = -0.5
+
+[node name="HeadBobComponent" type="Node3D" parent="." unique_id=1526535111]
+script = ExtResource("5_qlg0r")
+sprint_intensity_y = 0.08
+walk_intensity_y = 0.06
+sprint_intensity_x = 0.08
+walk_intensity_x = 0.06
+idle_enter_delay = 0.2
+idle_breathing_roll = 0.8
+
+[node name="SpeedEffectComponent" type="Node3D" parent="." unique_id=1450036067]
+script = ExtResource("6_tuyoq")
+default_profile = SubResource("Resource_fjrip")
+
+[node name="DashComponent" type="Node3D" parent="." unique_id=2070929657]
+script = ExtResource("8_smehm")
+
+[node name="FallBehaviorComponent" type="Node3D" parent="." unique_id=1568433841]
+script = ExtResource("9_ur7pv")
+min_fall_speed = 2.0
+roll_speed = 4.0
+roll_duration = 0.2
+roll_lockout = 0.4
+roll_scale_min_speed = 2.0
+roll_scale_max_speed = 10.0
+roll_duration_min = 0.1
+roll_duration_max = 0.2
+slap_recovery = 1.5
+slap_duration_min = 1.5
+slap_duration_max = 2.0
+slap_intensity_min = 1.8
+
+[node name="WallRunComponent" type="Node3D" parent="." unique_id=732949457]
+script = ExtResource("10_y4r1p")
+run_speed = 5.0
+run_max_distance = 5.0
+climb_max_distance = 4.0
+slide_max_time = 0.4
+jump_up_force = 4.0
+max_wall_jumps_per_airtime = 6
+enable_chain = true
+turn_duration = 0.2
+tilt_angle = 20.0
+
+[node name="LadderClimbComponent" type="Node3D" parent="." unique_id=34305310]
+script = ExtResource("11_d2wvv")
+ladder_slide_speed = 6.0
+attach_lerp_speed = 4.0
+mantle_rise = 1.0
+jump_off_forward = 12.0
+jump_off_up = 3.0
