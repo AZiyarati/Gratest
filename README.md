@@ -1,0 +1,203 @@
+# FPC — First-Person Controller
+
+A first-person controller for Godot 4, built one small piece at a time by a
+3D artist learning to code with AI as a collaborator.
+
+---
+
+## Why this exists
+
+I don't write code professionally. I'm a 3D modeler with a basic understanding
+of programming — enough to read a script and tweak values, not enough to build
+a controller from scratch. I've always wanted to make my
+dream game, but the coding side kept blocking me.
+
+So I leaned on AI to bridge that gap. The workflow is simple:
+
+1. Pick **one** mechanic from a roadmap (never more than one).
+2. Ask for a single script that implements it, with strict rules about what
+   it's allowed to touch.
+3. Paste it into Godot. Wire it up. Play.
+4. Tune the exported values until it feels right.
+5. Only then move on to the next roadmap item.
+
+Every mechanic in this repo has been personally tested in the engine and
+approved before it earned a checkmark on the roadmap. Nothing is theoretical.
+
+This is a hobby project. It might become the base for my own game one day —
+if it does, I'll take this template and build my own ideas on top. If you're
+a designer in the same boat, feel free to do the same.
+
+---
+
+## What's in this build
+
+Everything below is fully implemented and tested. Controls assume the default
+input map (which you can rebind in Project → Project Settings → Input Map).
+
+### Movement
+
+| Input | Action |
+|---|---|
+| **W / A / S / D** | Walk |
+| **Shift + WASD** | Sprint |
+| **Ctrl (hold)** | Crouch |
+| **Double-tap Ctrl** | Prone (crawl) — toggle mode |
+| **Hold Ctrl while crouched** | Prone — hold mode |
+| **Shift + Ctrl + WASD (running)** | Slide — sprint into crouch |
+| **Shift + WASD (crouched)** | Crouch-sprint |
+
+### Jumping
+
+| Input | Action |
+|---|---|
+| **Space** | Jump |
+| **Space (again in air)** | Double jump |
+| **Tap Space** | Short jump |
+| **Hold Space** | Full-height jump (variable jump height) |
+| **Space right after walking off a ledge** | Coyote jump (grace window) |
+| **Space pressed slightly before landing** | Buffered jump |
+
+### Air movement
+
+| Input | Action |
+|---|---|
+| **Mouse in air** | Air steer — subtle lateral nudge |
+| **Mouse + A / D + Space (chain)** | Bunny hop — Quake-style air strafe |
+
+### Wall traversal
+
+Run at, fall past, or climb up walls with these mechanics. Each has its own
+feel — you'll find the tuning exports in the WallRunComponent.
+
+| Input | Action |
+|---|---|
+| **Run at a wall while airborne** | Horizontal wall run |
+| **Fall next to a wall** | Wall slide (works on head-on walls too) |
+| **Look at a wall + hold W while airborne** | Vertical wall climb |
+| **Space during any wall state** | Wall jump |
+| **Q during a wall state** | Q-turn — rotates the body to face away |
+| **Q, then Space** | Post-turn wall jump — launches along your new facing |
+| **Chain wall-to-wall jumps** | Speed stacks (toggleable — off by default) |
+| **Ctrl during a wall slide** | Cancel the slide |
+
+### Ladders
+
+Ladders are a dedicated collision layer (layer 5, bit 16). Tag any ladder
+mesh with that layer and the player will attach to it.
+
+| Input | Action |
+|---|---|
+| **Walk into a ladder** | Attach |
+| **W / Space** | Climb up |
+| **S** | Climb down |
+| **Ctrl** | Fast slide down |
+| **Hold W at the top** | Auto-mantle over the top |
+| **Space while looking away** | Jump off the ladder in your look direction |
+
+### Fall behavior
+
+The controller reads how fast you were falling at the moment of impact and
+picks a landing animation automatically.
+
+| Input / situation | Action |
+|---|---|
+| **Small fall** | Soft landing (no camera motion) |
+| **Big fall** | Hard landing (camera dips) |
+| **Very big fall** | Slap (heavy camera hit + screen pulse) |
+| **Ctrl right before impact** | Roll — carries momentum, mouse steers it |
+
+### Camera & feel
+
+All procedural, no animation rig required.
+
+- **Head bob** — walk, sprint, crouch, prone (each with its own frequency)
+- **Idle breathing** — subtle pitch and roll when standing still
+- **Motion visuals** — jump, land, hard land, roll, slap camera kicks
+- **FOV punch** — brief FOV change on dash, wall run, zip
+- **Camera roll** — hold system for wall run tilt and Q-turn
+- **Speed screen effect** — fullscreen shader with priority system
+  (dash, zip, wall run, slide, fall, landing, slap each have a slot)
+
+### Dash
+
+| Input | Action |
+|---|---|
+| **Dash key** | Horizontal burst with FOV punch |
+| **Dash + WASD (on ground)** | Directional dash |
+| **Dash while on a wall or ladder** | Limited per contact, launches along look direction |
+
+### Fly mode (developer)
+
+| Input | Action |
+|---|---|
+| **Fly key** | Toggle noclip-style flight |
+| **Space / Ctrl in fly** | Ascend / descend |
+| **Sprint + fly** | Boost speed |
+
+---
+
+## How this was built
+
+I want to be honest about the process, because "AI-assisted" gets thrown
+around a lot and most of it doesn't describe what actually happened here.
+
+**The architecture was designed by an AI, iterated by an AI, and tested by a
+human.** I didn't write these scripts. I also didn't blindly paste them. Every
+session followed the same shape:
+
+1. I pasted a project reference document (`FPC_PROJECT.md`) that defines the
+   whole architecture — every component, every shared field, every convention
+   (never write `eyes.*` directly, never cast your own rays, etc.).
+2. I asked for **one** component or **one** sub-feature at a time.
+3. I ran it in Godot. If something was wrong, I described the symptom and
+   asked for a fix.
+4. When it felt right, I ticked the roadmap and moved on.
+
+The parts that matter — the priority order of physics ownership, the camera
+accumulator API that stops components from fighting each other, the sensor
+hub that centralizes every ray cast — those came out of conversation, not
+out of a single prompt.
+
+If you're trying to do the same thing, the workflow that worked for me was:
+**write a project doc first, then never let a session touch more than one
+component.**
+
+`FPC_PROJECT.md` is the full architecture. It's the same document I
+paste into AI sessions — you're welcome to do the same. [ i will upload it later :) ]
+
+---
+
+## Status
+
+Core locomotion, jump family, air family, fall behavior, camera feel,
+wall traversal, and ladder climbing are all in and tested.
+
+Still to come (see `ROADMAP.md`):
+
+- Ledge grab, vault, ziplines
+- Dual grappling hooks + rope physics
+- Grinding, gliding, ground pound
+- Audio, HUD, menus
+- Multiplayer foundation
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE).
+
+You can use this in personal or commercial projects. You can modify it,
+fork it, sell a game built on it. The only requirement is that you keep the
+copyright notice and credit the original author.
+
+If you build something with it, I'd love to see it.
+
+---
+
+## Credits
+
+Made by C[A]pitan AL! — 3D modeler, hobbyist game developer, AI-assisted
+coder.
+
+Built with [Godot Engine 4.x](https://godotengine.org) (MIT License).
