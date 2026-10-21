@@ -24,6 +24,8 @@ extends Node
 @export_flags_3d_physics var mask_ledge: int = 8
 ## Collision mask used for grapple anchor detection.
 @export_flags_3d_physics var mask_hook: int = 2
+## Collision mask used for vaultable obstacles.
+@export_flags_3d_physics var mask_vault: int = 4
 
 @export_group("Detection — Shapes")
 ## How far above the player the slope probe starts.

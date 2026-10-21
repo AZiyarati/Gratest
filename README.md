@@ -4,6 +4,10 @@ A first-person controller for Godot 4, built one small piece at a time by a
 3D artist learning to code with AI as a collaborator.
 
 ---
+## Naming
+previous project i was working was named Grapple test and it had a lot of bugs, so i decided to start new project and name it Gratest (Grapple + Test)
+
+---
 
 ## Why this exists
 

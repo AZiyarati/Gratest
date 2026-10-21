@@ -11,6 +11,7 @@
 [ext_resource type="Script" uid="uid://b40eacrlxhmok" path="res://scripts/components/core/fall_behavior_component.gd" id="9_ur7pv"]
 [ext_resource type="Script" uid="uid://bjhfogoemd3ia" path="res://scripts/components/traversal/wall_run_component.gd" id="10_y4r1p"]
 [ext_resource type="Script" uid="uid://d06wvm56oskdc" path="res://scripts/components/traversal/ladder_climb_component.gd" id="11_d2wvv"]
+[ext_resource type="Script" uid="uid://bja6igl7nrt6s" path="res://scripts/components/traversal/vault_component.gd" id="12_3v2ag"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_am7ho"]
 
@@ -127,3 +128,21 @@ attach_lerp_speed = 4.0
 mantle_rise = 1.0
 jump_off_forward = 12.0
 jump_off_up = 3.0
+
+[node name="VaultComponent" type="Node3D" parent="." unique_id=516724322]
+script = ExtResource("12_3v2ag")
+kong_min_forward_speed = 4.0
+kong_max_fall_speed = 3.0
+kong_duration = 0.5
+kong_arc_margin = 0.3
+kong_pitch_lean = 18.0
+ledge_top_search_height = 10.0
+ledge_max_grab_height = 10.0
+landing_capsule_check = false
+landing_capsule_height = 2.0
+vault_duration = 0.5
+vault_arc_margin = 0.6
+vault_clearance = 0.5
+vault_momentum_carry = 0.4
+turn_degrees = 1.5
+turn_speed = 0.1

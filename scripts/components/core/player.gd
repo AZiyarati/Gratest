@@ -52,6 +52,7 @@ extends CharacterBody3D
 @onready var fall_behavior: Node = get_node_or_null("FallBehaviorComponent")
 @onready var wall_run: Node = get_node_or_null("WallRunComponent")
 @onready var ladder_climb: Node = get_node_or_null("LadderClimbComponent")
+@onready var vault: Node = get_node_or_null("VaultComponent")
 
 # -----------------------------------------------------------------------------
 # Shared state mirrors
@@ -124,6 +125,8 @@ func _ready() -> void:
 		wall_run.setup(self)
 	if ladder_climb != null and ladder_climb.has_method("setup"):
 		ladder_climb.setup(self)
+	if vault != null and vault.has_method("setup"):
+		vault.setup(self)
 
 func _physics_process(delta: float) -> void:
 	# 1. Tick camera hold timers.
@@ -167,16 +170,23 @@ func _physics_process(delta: float) -> void:
 
 	if wall_run != null and wall_run.has_method("detect"):
 		wall_run.detect(delta)
-
-	# Priority chain. Higher-priority states own the body.
-	if ladder_climb != null and ladder_climb.has_method("is_active") and ladder_climb.is_active():
+	if vault != null and vault.has_method("detect"):
+		vault.detect(delta)
+		
+ 	# Priority chain. Higher-priority states own the body.
+	#if ladder_climb != null and ladder_climb.has_method("is_active") and ladder_climb.is_active():
+	if vault != null and vault.has_method("is_active") \
+			and vault.is_active():
+		vault.apply(delta)
+	elif ladder_climb != null and ladder_climb.has_method("is_active") \
+			and ladder_climb.is_active():
 		ladder_climb.apply(delta)
 	elif wall_run != null and wall_run.has_method("is_active") \
 			and wall_run.is_active():
 		wall_run.apply(delta)
 	else:
 		movement.update(delta)
-
+	
 	if dash != null and dash.has_method("update"):
 		dash.update(delta)
 
@@ -195,6 +205,8 @@ func _physics_process(delta: float) -> void:
 		speed_effect.update(delta)
 	if wall_run != null and wall_run.has_method("update_camera"):
 		wall_run.update_camera(delta)
+	if vault != null and vault.has_method("update_camera"):
+		vault.update_camera(delta)
 	if ladder_climb != null and ladder_climb.has_method("update_camera"):
 		ladder_climb.update_camera(delta)
 

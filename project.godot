@@ -67,6 +67,7 @@ turn_around={
 
 3d_physics/layer_1="ground/ceiling"
 3d_physics/layer_2="hook"
+3d_physics/layer_3="vault_mask"
 3d_physics/layer_4="ledge"
 3d_physics/layer_5="Ladder surfaces"
 3d_physics/layer_6="slope"

@@ -184,6 +184,24 @@ size = Vector3(10, 0.1, 30)
 [sub_resource type="BoxShape3D" id="BoxShape3D_ya4ey"]
 size = Vector3(10, 0.1, 30)
 
+[sub_resource type="BoxMesh" id="BoxMesh_30hvs"]
+size = Vector3(5, 1, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_6a7vb"]
+size = Vector3(5, 1, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_jkv2x"]
+size = Vector3(5, 1.5, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_jbj1t"]
+size = Vector3(5, 1.5, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_jbj1t"]
+size = Vector3(5, 1.3, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_muem4"]
+size = Vector3(5, 1.3, 1)
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_choun"]
 albedo_texture = ExtResource("2_sugp2")
 uv1_triplanar = true
@@ -378,7 +396,7 @@ sides = 40
 
 [node name="wall-Circular" type="StaticBody3D" parent="wall" unique_id=406535214]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.225811, 0, -6.5573378)
-collision_layer = 129
+collision_layer = 133
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="wall/wall-Circular" unique_id=1545895840]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
@@ -450,8 +468,46 @@ mesh = SubResource("BoxMesh_choun")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ladder/ladder5" unique_id=2019041200]
 shape = SubResource("BoxShape3D_ya4ey")
 
+[node name="vault" type="Node3D" parent="." unique_id=1306167134]
+
+[node name="vault0" type="StaticBody3D" parent="vault" unique_id=1095494601]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 29.500462)
+collision_layer = 5
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="vault/vault0" unique_id=1691867437]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.60000014, 0)
+mesh = SubResource("BoxMesh_30hvs")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="vault/vault0" unique_id=2090507599]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5999999, 0)
+shape = SubResource("BoxShape3D_6a7vb")
+
+[node name="vault1" type="StaticBody3D" parent="vault" unique_id=1513056129]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 18.500462)
+collision_layer = 5
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="vault/vault1" unique_id=683211567]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.80000013, 0)
+mesh = SubResource("BoxMesh_jkv2x")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="vault/vault1" unique_id=1184990089]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7999999, 0)
+shape = SubResource("BoxShape3D_jbj1t")
+
+[node name="vault2" type="StaticBody3D" parent="vault" unique_id=777088432]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 24.500462)
+collision_layer = 5
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="vault/vault2" unique_id=851577746]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7000001, 0)
+mesh = SubResource("BoxMesh_jbj1t")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="vault/vault2" unique_id=1526630041]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.69999987, 0)
+shape = SubResource("BoxShape3D_muem4")
+
 [node name="Player" parent="." unique_id=1196337714 instance=ExtResource("2_0wfyh")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -38.78234, 0, 51.134132)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.0198593, 0, 33.998947)
 
 [node name="csgProto" type="Node3D" parent="." unique_id=1209254184]
 

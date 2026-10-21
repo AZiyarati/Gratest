@@ -104,10 +104,11 @@ Status: [x] done · [~] partial · [ ] not started
       - [ ] toggle
       - [ ] horizontal + vertical degrees
       - [ ] turn speed + camera lerp speed
-- [ ] **Wall run → wall jump chain** — **(style)** chain speed-up, capped (T) 🚧
-      - [ ] toggle
-      - [ ] max speed cap
-      - [ ] reset conditions (grounded / timeout / stance change)
+- [x] **Wall run → wall jump chain** — **(style)** chain speed-up, capped (T)
+      - [x] toggle (`enable_chain`, default off)
+      - [x] hard speed cap (`chain_max_speed`)
+      - [x] reset on ground / timeout / stance change
+      - [x] per-session wall-touch refresh
 - [x] **Ladder climb** — dedicated component, own collision layer
       - [x] W / Space climbs, S / Ctrl descends
       - [x] two styles: smooth / stepped
@@ -120,7 +121,18 @@ Status: [x] done · [~] partial · [ ] not started
 - [ ] **Ledge shimmy** — inner / outer corner circular turn
 - [ ] **Ledge climb up/down** — W/S while hanging, auto-mantle
 - [ ] **Ledge jump-off / slingshot** — charge Space, launch away
-- [ ] **Vault** — auto / manual, Q-turn, side drift, landing safety
+- [x] **Vault** — auto / manual, Q-turn, side drift, landing safety
+      - [x] auto-vault on approach
+      - [x] manual vault (W or Space press)
+      - [x] Q-turn during vault (cosmetic rotation)
+      - [x] side drift (A/D during vault)
+      - [x] multi-probe landing safety (refuses cliffs)
+      - [x] capsule fit check (refuses tight landings)
+      - [x] camera pitch / roll blend + dynamic lean
+      - [x] cooldown gate
+      - [x] style system (Lazy / Dash / Speed by entry speed)
+      - [x] **Kong vault (airborne)** — auto-triggered dive-over with forward push
+      - [x] **Ledge vault (airborne below)** — auto pull-up onto platform top
 - [ ] **Full wall climbing** — arbitrary surfaces, pipes
 - [ ] **Zipline mount / dismount**
 
@@ -380,6 +392,10 @@ Status: [x] done · [~] partial · [ ] not started
 | 35 | Ladder variable jump | `ladder_climb_component.gd` | ✅ | parallel to wall-jump cut |
 | 36 | Q-turn wall jump | `wall_run_component.gd` | ✅ | per-side sign flip, session-gated, grace window |
 | 37 | Variable wall jump — forward cut | `wall_run_component.gd` | ✅ | horizontal impulse now scales on tap |
+| 38 | Chain speed-up | `wall_run_component.gd` | ✅ | opt-in, timeout-gated, hard cap |
+| 39 | Vault | `vault_component.gd` | ✅ | 3-phase style system, landing Y fix, exit velocity fix |
+| 40 | Kong vault | `vault_component.gd` | ✅ | near/far probe detection, KONG style, forward dive push |
+| 41 | Ledge vault | `vault_component.gd` | ✅ | below-ledge pull-up, LEDGE style, air-detection ordering |
 
 **Next session:** 
 **Queued after:** 
