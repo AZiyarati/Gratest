@@ -1,0 +1,48 @@
+[gd_scene format=3 uid="uid://ckvtogidhvpmj"]
+
+[ext_resource type="Texture2D" uid="uid://da82kgau6suph" path="res://assets/textures/grid/dark_grid.png" id="1_ogiwm"]
+[ext_resource type="PackedScene" uid="uid://djyhsjnid7k4n" path="res://scenes/player/player.tscn" id="2_7g7cu"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_8nqjf"]
+sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+ground_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+
+[sub_resource type="Sky" id="Sky_boqc5"]
+sky_material = SubResource("ProceduralSkyMaterial_8nqjf")
+
+[sub_resource type="Environment" id="Environment_ogiwm"]
+background_mode = 2
+sky = SubResource("Sky_boqc5")
+glow_enabled = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_nsoc2"]
+albedo_texture = ExtResource("1_ogiwm")
+uv1_scale = Vector3(0.1, 0.1, 0.1)
+uv1_triplanar = true
+
+[sub_resource type="BoxMesh" id="BoxMesh_am7ho"]
+material = SubResource("StandardMaterial3D_nsoc2")
+size = Vector3(40, 0.5, 40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_am7ho"]
+size = Vector3(40, 0.5, 40)
+
+[node name="MovementTestRoom" type="Node3D" unique_id=458558452]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1390209351]
+environment = SubResource("Environment_ogiwm")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1033000259]
+transform = Transform3D(0.8660254, 0.35355338, -0.35355338, 0, 0.70710677, 0.70710677, 0.5, -0.6123724, 0.6123724, 0, 0, 0)
+shadow_enabled = true
+
+[node name="Ground" type="StaticBody3D" parent="." unique_id=1554206009]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Ground" unique_id=926974094]
+mesh = SubResource("BoxMesh_am7ho")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground" unique_id=461546097]
+shape = SubResource("BoxShape3D_am7ho")
+
+[node name="Player" parent="." unique_id=1648452075 instance=ExtResource("2_7g7cu")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)

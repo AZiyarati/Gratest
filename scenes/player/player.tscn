@@ -1,0 +1,42 @@
+[gd_scene format=3 uid="uid://djyhsjnid7k4n"]
+
+[ext_resource type="Script" uid="uid://co527amw5kruf" path="res://scripts/core/player.gd" id="1_8afob"]
+[ext_resource type="Script" uid="uid://bni4ybnv5p8h0" path="res://scripts/core/input_router.gd" id="2_input_router"]
+[ext_resource type="Script" uid="uid://cm28nvxbehas5" path="res://scripts/core/state_machine.gd" id="3_state_machine"]
+[ext_resource type="Script" uid="uid://bitbg83omqk75" path="res://scripts/core/movement_authority.gd" id="4_movement_authority"]
+[ext_resource type="PackedScene" path="res://scenes/modules/basic_locomotion.tscn" id="5_basic_loco"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_am7ho"]
+radius = 0.35
+height = 1.8
+
+[node name="Player" type="CharacterBody3D" unique_id=1648452075]
+script = ExtResource("1_8afob")
+
+[node name="StandingCollisionShape" type="CollisionShape3D" parent="." unique_id=2097966339]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+shape = SubResource("CapsuleShape3D_am7ho")
+
+[node name="Neck" type="Node3D" parent="." unique_id=1090182068]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+
+[node name="Head" type="Node3D" parent="Neck" unique_id=274185329]
+
+[node name="Eyes" type="Node3D" parent="Neck/Head" unique_id=65916046]
+
+[node name="Camera3D" type="Camera3D" parent="Neck/Head/Eyes" unique_id=1504685828]
+
+[node name="Core" type="Node" parent="." unique_id=1001001001]
+
+[node name="InputRouter" type="Node" parent="Core" unique_id=1001001002]
+script = ExtResource("2_input_router")
+
+[node name="StateMachine" type="Node" parent="Core" unique_id=1001001003]
+script = ExtResource("3_state_machine")
+
+[node name="MovementAuthority" type="Node" parent="Core" unique_id=1001001004]
+script = ExtResource("4_movement_authority")
+
+[node name="ModuleHost" type="Node" parent="." unique_id=1001001005]
+
+[node name="BasicLocomotion" parent="ModuleHost" unique_id=630392538 instance=ExtResource("5_basic_loco")]
