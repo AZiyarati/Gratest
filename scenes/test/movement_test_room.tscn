@@ -33,7 +33,7 @@ size = Vector3(40, 0.5, 40)
 environment = SubResource("Environment_ogiwm")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1033000259]
-transform = Transform3D(0.8660254, 0.35355338, -0.35355338, 0, 0.70710677, 0.70710677, 0.5, -0.6123724, 0.6123724, 0, 0, 0)
+transform = Transform3D(-1, -4.3711385e-08, 7.571034e-08, 0, 0.8660253, 0.49999994, -8.742278e-08, 0.49999997, -0.86602527, 0, 0, 0)
 shadow_enabled = true
 
 [node name="Ground" type="StaticBody3D" parent="." unique_id=1554206009]

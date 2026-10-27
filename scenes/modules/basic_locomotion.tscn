@@ -1,6 +1,6 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://bwawym7koqbay"]
 
-[ext_resource type="Script" path="res://scripts/modules/locomotion/basic_locomotion.gd" id="1_loco"]
+[ext_resource type="Script" uid="uid://crk37tceuh1w5" path="res://scripts/modules/locomotion/basic_locomotion.gd" id="1_loco"]
 
-[node name="BasicLocomotion" type="Node"]
+[node name="BasicLocomotion" type="Node" unique_id=1740349304]
 script = ExtResource("1_loco")

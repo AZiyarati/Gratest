@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://bni4ybnv5p8h0" path="res://scripts/core/input_router.gd" id="2_input_router"]
 [ext_resource type="Script" uid="uid://cm28nvxbehas5" path="res://scripts/core/state_machine.gd" id="3_state_machine"]
 [ext_resource type="Script" uid="uid://bitbg83omqk75" path="res://scripts/core/movement_authority.gd" id="4_movement_authority"]
-[ext_resource type="PackedScene" path="res://scenes/modules/basic_locomotion.tscn" id="5_basic_loco"]
+[ext_resource type="PackedScene" uid="uid://bwawym7koqbay" path="res://scenes/modules/basic_locomotion.tscn" id="5_basic_loco"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_am7ho"]
 radius = 0.35

@@ -20,6 +20,17 @@ func _ready() -> void:
 	_validate_structure()
 	_setup_core()
 	_setup_modules()
+	_wire_collaborators()
+
+
+## The single physics lifecycle for the whole character.
+## Order is explicit and documented here — not implicit scene-tree order.
+func _physics_process(delta: float) -> void:
+	if input_router == null or basic_locomotion == null or movement_authority == null:
+		return
+	input_router.tick(delta)
+	basic_locomotion.tick(delta)
+	movement_authority.tick(delta)
 
 
 func _validate_structure() -> void:
@@ -60,3 +71,8 @@ func _setup_modules() -> void:
 		push_error("Player: BasicLocomotion failed dependency validation; not activating.")
 		return
 	basic_locomotion.activate()
+
+
+func _wire_collaborators() -> void:
+	if basic_locomotion and input_router and movement_authority:
+		basic_locomotion.set_collaborators(input_router, movement_authority)
