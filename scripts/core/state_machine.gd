@@ -1,3 +1,4 @@
+## Owns the primary movement state (Grounded/Airborne) and validates transitions.
 extends Node
 class_name StateMachine
 
@@ -15,6 +16,16 @@ func setup(player: CharacterBody3D) -> void:
 		push_error("StateMachine: player reference is null.")
 		return
 	_player = player
+
+
+## Reads the collision result from the previous physics frame and updates
+## the primary state. Runs once per physics tick, before movement.
+func tick(_delta: float) -> void:
+	if _player == null:
+		return
+	var target := PrimaryState.GROUNDED if _player.is_on_floor() else PrimaryState.AIRBORNE
+	if target != _state:
+		request_transition(target)
 
 
 func get_state() -> int:

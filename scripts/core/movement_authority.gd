@@ -1,8 +1,9 @@
+## The single authority that writes Player.velocity and calls move_and_slide().
 extends Node
 class_name MovementAuthority
 
 var _player: CharacterBody3D
-var _pending_horizontal: Vector3 = Vector3.ZERO
+var _pending_velocity: Vector3 = Vector3.ZERO
 
 
 func setup(player: CharacterBody3D) -> void:
@@ -12,21 +13,20 @@ func setup(player: CharacterBody3D) -> void:
 	_player = player
 
 
-## Called by an ability to submit its horizontal velocity contribution for this tick.
-## One-shot: consumed by the next tick() and cleared.
-func submit_velocity_request(_source: String, horizontal_velocity: Vector3) -> void:
-	_pending_horizontal = horizontal_velocity
+## Called by an ability to submit its full 3D velocity contribution for this tick.
+## One-shot: consumed by the next tick() and cleared to zero.
+func submit_velocity_request(_source: String, velocity: Vector3) -> void:
+	_pending_velocity = velocity
 
 
-## Consumes the pending request, resolves final velocity, executes move_and_slide().
-## Session 4: vertical velocity is preserved (no gravity yet).
+## Resolves the final velocity (zero if no request was made this tick),
+## writes it once, and executes move_and_slide().
 func tick(_delta: float) -> void:
 	if _player == null:
 		return
-	var horizontal := _pending_horizontal
-	_pending_horizontal = Vector3.ZERO
-
-	_player.velocity = Vector3(horizontal.x, _player.velocity.y, horizontal.z)
+	var v := _pending_velocity
+	_pending_velocity = Vector3.ZERO
+	_player.velocity = v
 	_player.move_and_slide()
 
 

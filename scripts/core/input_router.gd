@@ -1,3 +1,4 @@
+## Reads raw input for this tick and exposes a normalized move intent.
 extends Node
 class_name InputRouter
 

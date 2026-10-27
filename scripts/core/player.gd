@@ -1,7 +1,7 @@
+## Player root: the single CharacterBody3D. Drives physics lifecycle and wires Core services + required modules.
 extends CharacterBody3D
 class_name Player
 
-## Required structural references; validated once in _ready().
 @onready var standing_collision_shape: CollisionShape3D = $StandingCollisionShape
 @onready var neck: Node3D = $Neck
 @onready var head: Node3D = $Neck/Head
@@ -26,9 +26,11 @@ func _ready() -> void:
 ## The single physics lifecycle for the whole character.
 ## Order is explicit and documented here — not implicit scene-tree order.
 func _physics_process(delta: float) -> void:
-	if input_router == null or basic_locomotion == null or movement_authority == null:
+	if input_router == null or state_machine == null \
+		or basic_locomotion == null or movement_authority == null:
 		return
 	input_router.tick(delta)
+	state_machine.tick(delta)
 	basic_locomotion.tick(delta)
 	movement_authority.tick(delta)
 

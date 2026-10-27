@@ -1,15 +1,18 @@
+## Required baseline: converts input intent into a velocity request with gravity.
 extends Node
 class_name BasicLocomotion
-
-## Required baseline locomotion module.
-## Session 4: computes a horizontal velocity contribution from input intent
-## and submits it to MovementAuthority. No gravity, jump, stance, or feel yet.
 
 ## Ground walking speed in meters per second.
 @export var walk_speed: float = 5.0
 
-## Lerp rate (per second) applied when matching the requested horizontal velocity.
+## Horizontal lerp rate (per second) applied when matching requested velocity.
 @export var acceleration: float = 10.0
+
+## Downward acceleration while airborne, in meters per second squared. gravity = rate
+@export var gravity: float = 20.0
+
+## Terminal fall speed cap, in meters per second (negative direction). max_fall_speed = limit
+@export var max_fall_speed: float = 50.0
 
 var _player: CharacterBody3D
 var _input_router: InputRouter
@@ -52,18 +55,29 @@ func tick(delta: float) -> void:
 	if not _active or _player == null or _input_router == null or _movement_authority == null:
 		return
 	var intent := _input_router.get_move_intent()
-	var desired := _compute_desired_horizontal(intent, delta)
-	_movement_authority.submit_velocity_request("basic_locomotion", desired)
+	var current := _movement_authority.get_current_velocity()
+
+	var desired_xz := _compute_desired_horizontal(intent, delta, current)
+	var desired_y := _compute_desired_vertical(current.y, delta)
+
+	_movement_authority.submit_velocity_request(
+		"basic_locomotion",
+		Vector3(desired_xz.x, desired_y, desired_xz.z)
+	)
 
 
-func _compute_desired_horizontal(intent: Vector2, delta: float) -> Vector3:
+func _compute_desired_horizontal(intent: Vector2, delta: float, current: Vector3) -> Vector3:
 	# Input.get_vector: +x = right, -y = forward.
 	# World mapping: forward = -Z, right = +X.
 	var target_world := Vector3(intent.x, 0.0, intent.y) * walk_speed
-
-	var current_horizontal := Vector3.ZERO
-	var v := _movement_authority.get_current_velocity()
-	current_horizontal = Vector3(v.x, 0.0, v.z)
-
+	var current_horizontal := Vector3(current.x, 0.0, current.z)
 	var t := clampf(acceleration * delta, 0.0, 1.0)
 	return current_horizontal.lerp(target_world, t)
+
+
+func _compute_desired_vertical(current_y: float, delta: float) -> float:
+	if _player.is_on_floor():
+		# Grounded: suppress falling velocity; preserve positive (future jump) velocity.
+		return maxf(current_y, 0.0)
+	# Airborne: apply gravity, clamp to terminal velocity.
+	return maxf(current_y - gravity * delta, -max_fall_speed)
