@@ -1,4 +1,4 @@
-## Required baseline: converts input intent into a velocity request with gravity.
+## Required baseline: converts input intent into a velocity request with gravity and a ground jump.
 extends Node
 class_name BasicLocomotion
 
@@ -8,11 +8,14 @@ class_name BasicLocomotion
 ## Horizontal lerp rate (per second) applied when matching requested velocity.
 @export var acceleration: float = 10.0
 
-## Downward acceleration while airborne, in meters per second squared. gravity = rate
+## Downward acceleration while airborne, in meters per second squared.
 @export var gravity: float = 20.0
 
-## Terminal fall speed cap, in meters per second (negative direction). max_fall_speed = limit
+## Terminal fall speed cap, in meters per second (negative direction).
 @export var max_fall_speed: float = 50.0
+
+## Upward velocity applied on a ground jump, in meters per second.
+@export var jump_velocity: float = 6.0
 
 var _player: CharacterBody3D
 var _input_router: InputRouter
@@ -60,6 +63,10 @@ func tick(delta: float) -> void:
 	var desired_xz := _compute_desired_horizontal(intent, delta, current)
 	var desired_y := _compute_desired_vertical(current.y, delta)
 
+	# Ground jump: consume this-tick jump press while grounded.
+	if _player.is_on_floor() and _input_router.get_jump_just_pressed():
+		desired_y = jump_velocity
+
 	_movement_authority.submit_velocity_request(
 		"basic_locomotion",
 		Vector3(desired_xz.x, desired_y, desired_xz.z)
@@ -77,7 +84,7 @@ func _compute_desired_horizontal(intent: Vector2, delta: float, current: Vector3
 
 func _compute_desired_vertical(current_y: float, delta: float) -> float:
 	if _player.is_on_floor():
-		# Grounded: suppress falling velocity; preserve positive (future jump) velocity.
+		# Grounded: suppress falling velocity; preserve positive (jump) velocity.
 		return maxf(current_y, 0.0)
 	# Airborne: apply gravity, clamp to terminal velocity.
 	return maxf(current_y - gravity * delta, -max_fall_speed)
