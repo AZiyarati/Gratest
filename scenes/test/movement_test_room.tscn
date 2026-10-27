@@ -44,5 +44,14 @@ mesh = SubResource("BoxMesh_am7ho")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Ground" unique_id=461546097]
 shape = SubResource("BoxShape3D_am7ho")
 
+[node name="Ground2" type="StaticBody3D" parent="." unique_id=654491740]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.5, 18)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Ground2" unique_id=833923328]
+mesh = SubResource("BoxMesh_am7ho")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground2" unique_id=2102027871]
+shape = SubResource("BoxShape3D_am7ho")
+
 [node name="Player" parent="." unique_id=1648452075 instance=ExtResource("2_7g7cu")]
-transform = Transform3D(1, 0, 0, 0, 0.99999994, 0, 0, 0, 0.99999994, 0, 5, 0)
+transform = Transform3D(1, 0, 0, 0, 0.9999999, 0, 0, 0, 0.9999999, 0, 7.5, 3)

@@ -35,6 +35,7 @@ func _physics_process(delta: float) -> void:
 	movement_authority.tick(delta)
 
 
+
 func _validate_structure() -> void:
 	var required := {
 		"StandingCollisionShape": standing_collision_shape,
