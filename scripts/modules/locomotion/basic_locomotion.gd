@@ -81,6 +81,19 @@ enum StopPolicy {
 ## SMOOTH: decelerate at ground_decel rate. SNAPPY: instantly zero horizontal velocity.
 @export var stop_policy: StopPolicy = StopPolicy.SMOOTH
 
+## Maximum walkable slope angle in degrees. Surfaces steeper than this are treated
+## as walls — the player cannot walk on them and will fall or slide down instead.
+## Applied to CharacterBody3D.floor_max_angle each tick.
+@export_range(0.0, 89.0, 0.5) var max_walkable_slope_angle: float = 45.0
+
+## Floor snap distance in meters. Keeps the character glued to the ground when walking
+## down slopes and small step-downs without losing floor contact. Must be >= the
+## tallest step height you want to descend smoothly without skipping. 0.55 covers
+## 0.4m steps with margin, and is still safe for slope walking at sprint speed
+## (~0.12m needed at 45° downhill, 10 m/s, 60 FPS). Applied to CharacterBody3D
+## .floor_snap_length each tick.
+@export var floor_snap_length: float = 0.55
+
 var _player: Player
 var _input_router: InputRouter
 var _movement_authority: MovementAuthority
@@ -130,6 +143,7 @@ func is_active() -> bool:
 func tick(delta: float) -> void:
 	if not _active or _player == null or _input_router == null or _movement_authority == null:
 		return
+	_sync_physics_settings()
 	_update_jump_timers(delta)
 	_handle_stance()
 	_update_sprint()
@@ -154,6 +168,16 @@ func tick(delta: float) -> void:
 		"basic_locomotion",
 		Vector3(desired_xz.x, desired_y, desired_xz.z)
 	)
+
+
+## Syncs the player's CharacterBody3D physics properties with our exports.
+## Idempotent — only writes when the value actually changed (is_equal_approx).
+func _sync_physics_settings() -> void:
+	var desired_max_angle := deg_to_rad(max_walkable_slope_angle)
+	if not is_equal_approx(_player.floor_max_angle, desired_max_angle):
+		_player.floor_max_angle = desired_max_angle
+	if not is_equal_approx(_player.floor_snap_length, floor_snap_length):
+		_player.floor_snap_length = floor_snap_length
 
 
 func _handle_stance() -> void:
@@ -192,7 +216,6 @@ func _update_sprint() -> void:
 			_desired_sprinting = not _desired_sprinting
 
 
-## Sprint is effective only when enabled, latched, standing, and (if sprint_in_air=false) grounded.
 func _is_effectively_sprinting() -> bool:
 	if not sprint_enabled:
 		return false
@@ -243,11 +266,9 @@ func _compute_desired_horizontal(intent: Vector2, delta: float, current: Vector3
 
 	var has_input := intent.length_squared() > 0.0001
 
-	# Snappy stop: instant horizontal zero when no input on ground.
 	if not has_input and on_floor and stop_policy == StopPolicy.SNAPPY:
 		return Vector3.ZERO
 
-	# Split acceleration / deceleration by ground state and input presence.
 	var rate: float
 	if has_input:
 		rate = ground_accel if on_floor else air_accel
@@ -257,7 +278,6 @@ func _compute_desired_horizontal(intent: Vector2, delta: float, current: Vector3
 	var t := clampf(rate * delta, 0.0, 1.0)
 	var result := current_horizontal.lerp(target_world, t)
 
-	# Air steer: rotate horizontal velocity by mouse yaw when airborne and moving.
 	if air_steer_strength > 0.0 \
 		and not on_floor \
 		and result.length() > air_steer_min_speed:

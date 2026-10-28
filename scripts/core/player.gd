@@ -157,26 +157,69 @@ func _stance_name(s: int) -> String:
 
 
 func _has_headroom_for(stance: int) -> bool:
-	var shape_node: CollisionShape3D
-	match stance:
-		Stance.STANDING:
-			shape_node = standing_collision_shape
-		Stance.CROUCHING:
-			shape_node = crouching_collision_shape
-		Stance.PRONE:
-			shape_node = prone_collision_shape
-		_:
-			return true
+	var current_height := _shape_height(_stance)
+	var target_height := _shape_height(stance)
+
+	# Growing to a shorter or equal stance needs no headroom check.
+	if target_height <= current_height:
+		return true
+
+	var shape_node := _shape_node_for(stance)
 	if shape_node == null or shape_node.shape == null:
 		return true
+
+	var new_height := target_height - current_height
+	var radius := _shape_radius_xz(stance)
+
+	# Box probe covering only the NEW volume (from current top to target top).
+	# Using a box (not capsule) because:
+	#   - the new volume may be shorter than 2*radius (invalid capsule)
+	#   - a full-height vertical capsule from the feet reaches into slope terrain
+	#     boxes on ramps and produces false positives. Starting the probe at the
+	#     current top avoids this.
+	var probe := BoxShape3D.new()
+	probe.size = Vector3(radius * 2.0, new_height, radius * 2.0)
+
 	var space_state := get_world_3d().direct_space_state
 	var query := PhysicsShapeQueryParameters3D.new()
-	query.shape = shape_node.shape
-	query.transform = global_transform * shape_node.transform
+	query.shape = probe
+	# Box is centered, so place its center at current_top + new_height/2.
+	var center_y := current_height + new_height * 0.5
+	query.transform = global_transform * Transform3D(Basis(), Vector3.UP * center_y)
 	query.collision_mask = headroom_check_mask
 	query.exclude = [get_rid()]
 	var hits := space_state.intersect_shape(query, 1)
 	return hits.is_empty()
+
+
+func _shape_node_for(stance: int) -> CollisionShape3D:
+	match stance:
+		Stance.STANDING: return standing_collision_shape
+		Stance.CROUCHING: return crouching_collision_shape
+		Stance.PRONE: return prone_collision_shape
+		_: return null
+
+
+func _shape_height(stance: int) -> float:
+	var node := _shape_node_for(stance)
+	if node == null or node.shape == null:
+		return 0.0
+	if node.shape is CapsuleShape3D:
+		return node.shape.height
+	if node.shape is BoxShape3D:
+		return node.shape.size.y
+	return 0.0
+
+
+func _shape_radius_xz(stance: int) -> float:
+	var node := _shape_node_for(stance)
+	if node == null or node.shape == null:
+		return 0.0
+	if node.shape is CapsuleShape3D:
+		return node.shape.radius
+	if node.shape is BoxShape3D:
+		return maxf(node.shape.size.x, node.shape.size.z) * 0.5
+	return 0.0
 
 
 func _smooth_eye_height(delta: float) -> void:

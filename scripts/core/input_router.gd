@@ -35,6 +35,8 @@ func setup(player: CharacterBody3D) -> void:
 
 
 func _input(event: InputEvent) -> void:
+	# Raw mouse delta — reported as-is. Consumers gate their own usage
+	# (e.g. air steer only applies when airborne AND moving).
 	if event is InputEventMouseMotion:
 		_accumulated_mouse_delta_x += event.relative.x
 

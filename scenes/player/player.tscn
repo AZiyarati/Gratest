@@ -18,6 +18,10 @@ height = 1.0
 radius = 0.25
 height = 0.5
 
+[sub_resource type="SeparationRayShape3D" id="SeparationRayShape3D_am7ho"]
+length = 0.5
+slide_on_slope = true
+
 [node name="Player" type="CharacterBody3D" unique_id=1648452075]
 script = ExtResource("1_8afob")
 
@@ -34,6 +38,18 @@ disabled = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
 shape = SubResource("CapsuleShape3D_y5gmt")
 disabled = true
+
+[node name="Stair" type="CollisionShape3D" parent="." unique_id=874122981]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0.5, -0.4)
+shape = SubResource("SeparationRayShape3D_am7ho")
+
+[node name="Stair2" type="CollisionShape3D" parent="." unique_id=1796635743]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0.5, 0.4)
+shape = SubResource("SeparationRayShape3D_am7ho")
+
+[node name="Stair3" type="CollisionShape3D" parent="." unique_id=1613671243]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0.4, 0.5, 0)
+shape = SubResource("SeparationRayShape3D_am7ho")
 
 [node name="Neck" type="Node3D" parent="." unique_id=1090182068]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
