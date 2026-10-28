@@ -1,4 +1,4 @@
-## Required baseline: converts input intent into a velocity request with gravity, ground jump, jump cut, air steer, stance management, and sprint.
+## Required baseline: converts input intent into a velocity request with gravity, ground jump, jump cut, air steer, stance management, sprint, and bunny hop.
 extends Node
 class_name BasicLocomotion
 
@@ -94,6 +94,32 @@ enum StopPolicy {
 ## .floor_snap_length each tick.
 @export var floor_snap_length: float = 0.55
 
+@export_group("Bunny Hop")
+
+## Enable bunny hop. When on, holding jump auto-hops on every landing, and
+## W/A/D + mouse-move while airborne builds horizontal speed.
+@export var bhop_enabled: bool = true
+
+## Grace window (seconds) after landing during which a held jump still auto-fires.
+@export var bhop_landing_window: float = 0.15
+
+## Air-strafe acceleration applied toward the wish direction (meters per second squared).
+@export var bhop_air_accel: float = 30.0
+
+## Per-direction speed target for air strafe (meters per second). Turn continues
+## to add speed each tick while bhop is active, up to this cap per direction.
+@export var bhop_wish_speed: float = 5.0
+
+## Total horizontal speed cap during bhop (meters per second).
+@export var bhop_max_speed: float = 20.0
+
+## Maximum wish-direction rotation per physics tick while air strafing (degrees).
+## Much larger than air_steer_max_degrees_per_tick because air strafe needs a
+## significant angle between wish direction and current velocity to build speed
+## past bhop_wish_speed. If wish direction aligns with velocity, acceleration
+## goes to zero regardless of bhop_air_accel.
+@export var bhop_max_degrees_per_tick: float = 60.0
+
 var _player: Player
 var _input_router: InputRouter
 var _movement_authority: MovementAuthority
@@ -107,6 +133,7 @@ var _jump_buffer_timer: float = 0.0
 var _desired_crouched: bool = false
 var _desired_prone: bool = false
 var _desired_sprinting: bool = false
+var _bhop_landing_timer: float = 0.0
 
 
 func setup(player: Player) -> void:
@@ -144,6 +171,7 @@ func tick(delta: float) -> void:
 	if not _active or _player == null or _input_router == null or _movement_authority == null:
 		return
 	_sync_physics_settings()
+	_update_bhop_timers(delta)
 	_update_jump_timers(delta)
 	_handle_stance()
 	_update_sprint()
@@ -154,7 +182,20 @@ func tick(delta: float) -> void:
 	var desired_xz := _compute_desired_horizontal(intent, delta, current)
 	var desired_y := _compute_desired_vertical(current.y, delta)
 
-	if _can_jump() and _wants_to_jump() and not _player.is_prone():
+	# Bhop auto-hop on landing (held jump).
+	var bhop_fired := false
+	if bhop_enabled \
+		and _bhop_landing_timer > 0.0 \
+		and _player.is_on_floor() \
+		and _input_router.get_jump_held():
+		desired_y = jump_velocity
+		_coyote_timer = 0.0
+		_jump_buffer_timer = 0.0
+		_bhop_landing_timer = 0.0
+		bhop_fired = true
+
+	# Normal jump (buffer / coyote / press).
+	if not bhop_fired and _can_jump() and _wants_to_jump() and not _player.is_prone():
 		desired_y = jump_velocity
 		_coyote_timer = 0.0
 		_jump_buffer_timer = 0.0
@@ -171,13 +212,25 @@ func tick(delta: float) -> void:
 
 
 ## Syncs the player's CharacterBody3D physics properties with our exports.
-## Idempotent — only writes when the value actually changed (is_equal_approx).
 func _sync_physics_settings() -> void:
 	var desired_max_angle := deg_to_rad(max_walkable_slope_angle)
 	if not is_equal_approx(_player.floor_max_angle, desired_max_angle):
 		_player.floor_max_angle = desired_max_angle
 	if not is_equal_approx(_player.floor_snap_length, floor_snap_length):
 		_player.floor_snap_length = floor_snap_length
+
+
+## Detects landing edges and arms the bhop window. Runs BEFORE _update_fall_tracking
+## so _was_on_floor still holds last tick's value (correct landing edge detection).
+func _update_bhop_timers(delta: float) -> void:
+	if not bhop_enabled:
+		_bhop_landing_timer = 0.0
+		return
+	var on_floor := _player.is_on_floor()
+	if on_floor and not _was_on_floor:
+		_bhop_landing_timer = bhop_landing_window
+	elif _bhop_landing_timer > 0.0:
+		_bhop_landing_timer = maxf(0.0, _bhop_landing_timer - delta)
 
 
 func _handle_stance() -> void:
@@ -278,17 +331,52 @@ func _compute_desired_horizontal(intent: Vector2, delta: float, current: Vector3
 	var t := clampf(rate * delta, 0.0, 1.0)
 	var result := current_horizontal.lerp(target_world, t)
 
-	if air_steer_strength > 0.0 \
+	var mouse_dx := _input_router.get_mouse_delta_x()
+	var bhop_active := bhop_enabled and not on_floor and has_input and absf(mouse_dx) >= 1.0
+
+	# --- Bhop air strafe (runs BEFORE air steer) ---
+	# Rotates wish_dir by mouse (simulating view yaw change), then accelerates
+	# toward it. Uses UNROTATED `result` for the dot product because if air
+	# steer ran first, it would rotate `result` to match wish_dir, driving the
+	# dot product to |result| and reducing acceleration to zero. Larger rotation
+	# cap than air_steer's because meaningful air strafe needs a substantial
+	# angle between wish_dir and velocity (equilibrium speed is roughly
+	# bhop_wish_speed / cos(rotation_angle)).
+	if bhop_active:
+		var rot_degrees := clampf(
+			mouse_dx * air_steer_strength,
+			-bhop_max_degrees_per_tick,
+			bhop_max_degrees_per_tick
+		)
+		var wish_2d := intent.rotated(-deg_to_rad(rot_degrees))
+		var wish_dir := Vector3(wish_2d.x, 0.0, wish_2d.y).normalized()
+
+		var speed_in_wish := result.dot(wish_dir)
+		if speed_in_wish < bhop_wish_speed:
+			var add_speed := bhop_wish_speed - speed_in_wish
+			var accel_speed := minf(bhop_air_accel * delta, add_speed)
+			result += wish_dir * accel_speed
+
+			var mag := result.length()
+			if mag > bhop_max_speed:
+				result = result * (bhop_max_speed / mag)
+
+	# --- Air steer (rotate velocity) ---
+	# Skipped when bhop just consumed the mouse input — velocity rotation from
+	# air steer would shrink the angle between velocity and the next frame's
+	# wish_dir, capping the achievable speed at a value below bhop_wish_speed
+	# times the inverse cosine of a single-tick rotation.
+	if not bhop_active \
+		and air_steer_strength > 0.0 \
 		and not on_floor \
-		and result.length() > air_steer_min_speed:
-		var mouse_dx := _input_router.get_mouse_delta_x()
-		if mouse_dx != 0.0:
-			var degrees := clampf(
-				mouse_dx * air_steer_strength,
-				-air_steer_max_degrees_per_tick,
-				air_steer_max_degrees_per_tick
-			)
-			result = result.rotated(Vector3.UP, -deg_to_rad(degrees))
+		and result.length() > air_steer_min_speed \
+		and mouse_dx != 0.0:
+		var degrees := clampf(
+			mouse_dx * air_steer_strength,
+			-air_steer_max_degrees_per_tick,
+			air_steer_max_degrees_per_tick
+		)
+		result = result.rotated(Vector3.UP, -deg_to_rad(degrees))
 
 	return result
 

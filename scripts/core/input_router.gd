@@ -6,6 +6,7 @@ var _player: CharacterBody3D
 var _move_intent: Vector2 = Vector2.ZERO
 var _jump_just_pressed: bool = false
 var _jump_just_released: bool = false
+var _jump_held: bool = false
 var _crouch_just_pressed: bool = false
 var _crouch_held: bool = false
 var _prone_just_pressed: bool = false
@@ -64,6 +65,10 @@ func get_jump_just_released() -> bool:
 	return _jump_just_released
 
 
+func get_jump_held() -> bool:
+	return _jump_held
+
+
 func get_crouch_just_pressed() -> bool:
 	return _crouch_just_pressed
 
@@ -107,12 +112,14 @@ func _update_jump_input() -> void:
 	if InputMap.has_action("jump"):
 		_jump_just_pressed = Input.is_action_just_pressed("jump")
 		_jump_just_released = Input.is_action_just_released("jump")
+		_jump_held = Input.is_action_pressed("jump")
 	else:
 		if not _warned_missing_jump:
 			push_warning("InputRouter: 'jump' action missing from InputMap; falling back to ui_accept (Space/Enter). Add the named action for production use.")
 			_warned_missing_jump = true
 		_jump_just_pressed = Input.is_action_just_pressed("ui_accept")
 		_jump_just_released = Input.is_action_just_released("ui_accept")
+		_jump_held = Input.is_action_pressed("ui_accept")
 
 
 func _update_crouch_input() -> void:
