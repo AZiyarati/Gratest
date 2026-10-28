@@ -10,12 +10,31 @@
 radius = 0.35
 height = 1.8
 
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_crouch"]
+radius = 0.35
+height = 1.0
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_y5gmt"]
+radius = 0.25
+height = 0.5
+
 [node name="Player" type="CharacterBody3D" unique_id=1648452075]
 script = ExtResource("1_8afob")
+debug_stance = true
 
 [node name="StandingCollisionShape" type="CollisionShape3D" parent="." unique_id=2097966339]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
 shape = SubResource("CapsuleShape3D_am7ho")
+
+[node name="CrouchingCollisionShape" type="CollisionShape3D" parent="." unique_id=2097966340]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("CapsuleShape3D_crouch")
+disabled = true
+
+[node name="ProneCollisionShape" type="CollisionShape3D" parent="." unique_id=537242544]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
+shape = SubResource("CapsuleShape3D_y5gmt")
+disabled = true
 
 [node name="Neck" type="Node3D" parent="." unique_id=1090182068]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
