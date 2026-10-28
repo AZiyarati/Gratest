@@ -10,17 +10,21 @@ var _crouch_just_pressed: bool = false
 var _crouch_held: bool = false
 var _prone_just_pressed: bool = false
 var _prone_held: bool = false
+var _sprint_just_pressed: bool = false
+var _sprint_held: bool = false
 var _mouse_delta_x: float = 0.0
 
 var _accumulated_mouse_delta_x: float = 0.0
 
 var _prev_crouch_fallback: bool = false
 var _prev_prone_fallback: bool = false
+var _prev_sprint_fallback: bool = false
 
 var _warned_missing_move: bool = false
 var _warned_missing_jump: bool = false
 var _warned_missing_crouch: bool = false
 var _warned_missing_prone: bool = false
+var _warned_missing_sprint: bool = false
 
 
 func setup(player: CharacterBody3D) -> void:
@@ -42,6 +46,7 @@ func tick(_delta: float) -> void:
 	_update_jump_input()
 	_update_crouch_input()
 	_update_prone_input()
+	_update_sprint_input()
 	_update_mouse_delta()
 
 
@@ -71,6 +76,14 @@ func get_prone_just_pressed() -> bool:
 
 func get_prone_held() -> bool:
 	return _prone_held
+
+
+func get_sprint_just_pressed() -> bool:
+	return _sprint_just_pressed
+
+
+func get_sprint_held() -> bool:
+	return _sprint_held
 
 
 ## Horizontal mouse delta accumulated since the previous physics tick, in pixels.
@@ -126,6 +139,20 @@ func _update_prone_input() -> void:
 		_prone_just_pressed = now_held and not _prev_prone_fallback
 		_prone_held = now_held
 		_prev_prone_fallback = now_held
+
+
+func _update_sprint_input() -> void:
+	if InputMap.has_action("sprint"):
+		_sprint_just_pressed = Input.is_action_just_pressed("sprint")
+		_sprint_held = Input.is_action_pressed("sprint")
+	else:
+		if not _warned_missing_sprint:
+			push_warning("InputRouter: 'sprint' action missing from InputMap; falling back to physical Shift key. Add the named action (Project Settings → Input Map) for remappable sprint.")
+			_warned_missing_sprint = true
+		var now_held := Input.is_key_pressed(KEY_SHIFT)
+		_sprint_just_pressed = now_held and not _prev_sprint_fallback
+		_sprint_held = now_held
+		_prev_sprint_fallback = now_held
 
 
 func _update_mouse_delta() -> void:

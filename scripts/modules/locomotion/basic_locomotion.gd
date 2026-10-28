@@ -1,9 +1,17 @@
-## Required baseline: converts input intent into a velocity request with gravity, ground jump, jump cut, air steer, and stance management (crouch/prone).
+## Required baseline: converts input intent into a velocity request with gravity, ground jump, jump cut, air steer, stance management, and sprint.
 extends Node
 class_name BasicLocomotion
 
+enum StopPolicy {
+	SMOOTH,
+	SNAPPY,
+}
+
 ## Ground walking speed in meters per second.
 @export var walk_speed: float = 5.0
+
+## Ground sprinting speed in meters per second.
+@export var sprint_speed: float = 10.0
 
 ## Horizontal speed while crouched, in meters per second.
 @export var crouch_speed: float = 3.0
@@ -11,8 +19,18 @@ class_name BasicLocomotion
 ## Horizontal speed while prone, in meters per second.
 @export var prone_speed: float = 1.5
 
-## Horizontal lerp rate (per second) applied when matching requested velocity.
-@export var acceleration: float = 10.0
+## Ground acceleration lerp rate (per second) used when gaining or reversing speed.
+@export var ground_accel: float = 10.0
+
+## Ground deceleration lerp rate (per second) used when releasing input.
+@export var ground_decel: float = 20.0
+
+## Air acceleration lerp rate (per second) used when inputting in air.
+@export var air_accel: float = 5.0
+
+## Air deceleration lerp rate (per second) used when no input in air.
+## 0.0 preserves full air momentum (standard FPS); higher values bleed speed.
+@export var air_decel: float = 0.0
 
 ## Downward acceleration while airborne, in meters per second squared.
 @export var gravity: float = 20.0
@@ -47,9 +65,21 @@ class_name BasicLocomotion
 ## Prone mode. 0 = Hold (prone while held), 1 = Toggle (press to switch).
 @export_enum("Hold", "Toggle") var prone_mode: int = 1
 
+## Sprint mode. 0 = Hold (sprint while held), 1 = Toggle (press to switch).
+@export_enum("Hold", "Toggle") var sprint_mode: int = 0
+
+## Master toggle for sprint feature.
+@export var sprint_enabled: bool = true
+
+## When false, sprint has no effect while airborne (only ground movement speed is affected).
+@export var sprint_in_air: bool = false
+
 ## When true, pressing jump while crouched or prone attempts to stand up first.
-## This is standard FPS behavior: a jump from a low stance clears the stance if headroom allows.
 @export var jump_clears_stance: bool = true
+
+## How the player comes to a stop when releasing movement input while grounded.
+## SMOOTH: decelerate at ground_decel rate. SNAPPY: instantly zero horizontal velocity.
+@export var stop_policy: StopPolicy = StopPolicy.SMOOTH
 
 var _player: Player
 var _input_router: InputRouter
@@ -63,6 +93,7 @@ var _coyote_timer: float = 0.0
 var _jump_buffer_timer: float = 0.0
 var _desired_crouched: bool = false
 var _desired_prone: bool = false
+var _desired_sprinting: bool = false
 
 
 func setup(player: Player) -> void:
@@ -101,6 +132,7 @@ func tick(delta: float) -> void:
 		return
 	_update_jump_timers(delta)
 	_handle_stance()
+	_update_sprint()
 
 	var intent := _input_router.get_move_intent()
 	var current := _movement_authority.get_current_velocity()
@@ -125,28 +157,22 @@ func tick(delta: float) -> void:
 
 
 func _handle_stance() -> void:
-	# --- Jump clears stance ---
-	# Pressing jump while crouched or prone attempts to stand. If headroom blocks,
-	# the attempt is retried every tick until it succeeds or the player releases.
 	if jump_clears_stance and _input_router.get_jump_just_pressed():
 		_desired_crouched = false
 		_desired_prone = false
 
-	# --- Crouch desire ---
-	if crouch_mode == 0:  # HOLD
+	if crouch_mode == 0:
 		_desired_crouched = _input_router.get_crouch_held()
-	else:  # TOGGLE
+	else:
 		if _input_router.get_crouch_just_pressed():
 			_desired_crouched = not _desired_crouched
 
-	# --- Prone desire ---
-	if prone_mode == 0:  # HOLD
+	if prone_mode == 0:
 		_desired_prone = _input_router.get_prone_held()
-	else:  # TOGGLE
+	else:
 		if _input_router.get_prone_just_pressed():
 			_desired_prone = not _desired_prone
 
-	# --- Apply stance (priority: prone > crouch > stand) ---
 	if _desired_prone and not _player.is_prone():
 		_player.prone()
 	elif not _desired_prone and _player.is_prone():
@@ -156,6 +182,37 @@ func _handle_stance() -> void:
 			_player.crouch()
 		elif not _desired_crouched and _player.is_crouched():
 			_player.try_stand()
+
+
+func _update_sprint() -> void:
+	if sprint_mode == 0:
+		_desired_sprinting = _input_router.get_sprint_held()
+	else:
+		if _input_router.get_sprint_just_pressed():
+			_desired_sprinting = not _desired_sprinting
+
+
+## Sprint is effective only when enabled, latched, standing, and (if sprint_in_air=false) grounded.
+func _is_effectively_sprinting() -> bool:
+	if not sprint_enabled:
+		return false
+	if not _desired_sprinting:
+		return false
+	if not _player.is_standing():
+		return false
+	if not _player.is_on_floor() and not sprint_in_air:
+		return false
+	return true
+
+
+func _current_target_speed() -> float:
+	if _player.is_prone():
+		return prone_speed
+	if _player.is_crouched():
+		return crouch_speed
+	if _is_effectively_sprinting():
+		return sprint_speed
+	return walk_speed
 
 
 func _update_jump_timers(delta: float) -> void:
@@ -179,19 +236,30 @@ func _wants_to_jump() -> bool:
 
 
 func _compute_desired_horizontal(intent: Vector2, delta: float, current: Vector3) -> Vector3:
-	var speed := walk_speed
-	if _player.is_prone():
-		speed = prone_speed
-	elif _player.is_crouched():
-		speed = crouch_speed
-
+	var on_floor := _player.is_on_floor()
+	var speed := _current_target_speed()
 	var target_world := Vector3(intent.x, 0.0, intent.y) * speed
 	var current_horizontal := Vector3(current.x, 0.0, current.z)
-	var t := clampf(acceleration * delta, 0.0, 1.0)
+
+	var has_input := intent.length_squared() > 0.0001
+
+	# Snappy stop: instant horizontal zero when no input on ground.
+	if not has_input and on_floor and stop_policy == StopPolicy.SNAPPY:
+		return Vector3.ZERO
+
+	# Split acceleration / deceleration by ground state and input presence.
+	var rate: float
+	if has_input:
+		rate = ground_accel if on_floor else air_accel
+	else:
+		rate = ground_decel if on_floor else air_decel
+
+	var t := clampf(rate * delta, 0.0, 1.0)
 	var result := current_horizontal.lerp(target_world, t)
 
+	# Air steer: rotate horizontal velocity by mouse yaw when airborne and moving.
 	if air_steer_strength > 0.0 \
-		and not _player.is_on_floor() \
+		and not on_floor \
 		and result.length() > air_steer_min_speed:
 		var mouse_dx := _input_router.get_mouse_delta_x()
 		if mouse_dx != 0.0:

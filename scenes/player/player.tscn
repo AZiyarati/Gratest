@@ -20,7 +20,6 @@ height = 0.5
 
 [node name="Player" type="CharacterBody3D" unique_id=1648452075]
 script = ExtResource("1_8afob")
-debug_stance = true
 
 [node name="StandingCollisionShape" type="CollisionShape3D" parent="." unique_id=2097966339]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
@@ -59,3 +58,4 @@ script = ExtResource("4_movement_authority")
 [node name="ModuleHost" type="Node" parent="." unique_id=1001001005]
 
 [node name="BasicLocomotion" parent="ModuleHost" unique_id=630392538 instance=ExtResource("5_basic_loco")]
+sprint_in_air = true
